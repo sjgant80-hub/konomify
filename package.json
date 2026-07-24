@@ -1,0 +1,15 @@
+{
+  "name": "konomify",
+  "version": "0.1.0",
+  "description": "The one-command mouth: eat a build, return it konomified (graded, proven, grafted to the mesh, carded) or honestly rejected. Wires acg-assessor + proof-of-play + fallkard-forge into one tract.",
+  "type": "module",
+  "main": "./konomify.mjs",
+  "exports": { ".": "./konomify.mjs" },
+  "bin": { "konomify": "./konomify.mjs" },
+  "scripts": { "test": "node --test test.mjs" },
+  "engines": { "node": ">=18.0.0" },
+  "keywords": ["konomi", "pipeline", "quality-gate", "mesh", "organ", "provenance", "zero-dependency"],
+  "author": "AI-Native Solutions",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/sjgant80-hub/konomify.git" }
+}
