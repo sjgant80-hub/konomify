@@ -52,6 +52,45 @@ test('konomify never fabricates a pass — it only reflects the proof', () => {
   assert.equal(r.card, null);
 });
 
+// fake witness (behavioural gut) stages
+const verifyClean = () => ({ clean: true, score: 1, survived: [], source: 'x.mjs' });
+const verifyDirty = () => ({ clean: false, score: 0.55, survived: [{ line: 9, mutation: '< → <=' }, { line: 12, mutation: '|| → &&' }], source: 'x.mjs' });
+const verifySkip = () => ({ clean: true, skipped: true, source: null, reason: 'no "main" source declared' });
+
+test('BEHAVIOUR gut: elite structure but surviving mutants → back to the pan (elite ≠ correct)', () => {
+  const r = konomify('/theatre', { prove: provePass, verify: verifyDirty, forge, renderCard });
+  assert.equal(r.konomified, false, 'a structurally-elite but test-theatre build is NOT konomified');
+  assert.equal(r.organ, null, 'no organ for a build whose tests do not guard behaviour');
+  assert.equal(r.card, null);
+  assert.equal(r.undercooked.dominantTell, 'TEST-THEATRE');
+  assert.match(r.undercooked.message, /2 mutant\(s\) survived/);
+  assert.match(r.undercooked.message, /back to the pan/i);
+});
+
+test('BEHAVIOUR gut: passing both guts records the mutation score on the organ + receipt', () => {
+  const r = konomify('/solid', { prove: provePass, verify: verifyClean, forge, renderCard });
+  assert.equal(r.konomified, true);
+  assert.equal(r.organ.behaviour.gate, 'witness');
+  assert.equal(r.organ.behaviour.clean, true);
+  assert.equal(r.organ.behaviour.score, 1);
+  const html = receiptHtml({ repo: 'solid', ring: 'R6-resolution', core: '10/10', hash: 'abc', benchmark: 'assessor-v0.7', mutation: 1 });
+  assert.match(html, /mutation gate/);
+  assert.match(html, /witness/);
+});
+
+test('BEHAVIOUR gut: a skipped verify is recorded honestly, never fabricated as a pass', () => {
+  const r = konomify('/nomains', { prove: provePass, verify: verifySkip });
+  assert.equal(r.konomified, true, 'unable-to-verify does not block a structurally-admitted build');
+  assert.equal(r.organ.behaviour.skipped, true, 'but the organ says so — no fabricated behavioural proof');
+  assert.equal(r.organ.behaviour.clean, false, 'skipped is not clean');
+});
+
+test('BACKWARD COMPAT: with no verify stage the tract is structure-only (behaviour null)', () => {
+  const r = konomify('/good', { prove: provePass, forge, renderCard });
+  assert.equal(r.konomified, true);
+  assert.equal(r.organ.behaviour, null);
+});
+
 test('the ring is deterministic and always on the spine', () => {
   const a = defaultRing('fallkard'), b = defaultRing('fallkard');
   assert.equal(a, b);
