@@ -1,6 +1,6 @@
 # konomify · design specification
 
-> Spec version: **konomify-v0.2** · tracks library `KONOMIFY_VERSION` 0.2.
+> Spec version: **konomify-v0.3** · tracks library `KONOMIFY_VERSION` 0.3.
 
 konomify is **the mouth**. It is one command that runs a build through the whole digestive tract
 and returns it *konomified* — graded, proven, grafted to the mesh, and carded — or honestly
@@ -38,7 +38,7 @@ repo ─▶ 1. PROVE ─▶ 2. VERIFY ─▶ 3. GATE ─▶ 4. GRAFT ─▶ 5. C
 konomify knows nothing about how grading, forging, or art work — it consumes stages:
 
 - `prove(repoPath)` → a Proof-of-Play `{ admissible, hash, benchmark:{spec}, verdict:{core,nonCore,dominantTell} }`. **Required.**
-- `verify(repoPath)` → `{ clean, score, survived, source, skipped? }` — the witness behavioural gut. Optional; absent ⇒ structure-only tract (backward compatible).
+- `verify(repoPath)` → `{ clean, score, survived, source, skipped?, modules? }` — the witness behavioural gut. Optional; absent ⇒ structure-only tract (backward compatible). **NON-MASKING (v0.3):** the default `witnessVerify` gates EVERY top-level non-test `.mjs` module, not just `main`, and short-circuits on the first module with surviving mutants — a clean module can never carry a broken sibling. An untested behavioural module is un-witnessed and therefore fails; test it or baseline it.
 - `forge(opts)` → `{ png, manifest }` — the card forge. Optional; absent ⇒ organ emitted, card skipped.
 - `renderCard(opts)` → a PNG Buffer — the card art. Optional, paired with `forge`.
 

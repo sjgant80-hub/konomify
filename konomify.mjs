@@ -22,7 +22,7 @@
 
 import { basename } from 'node:path';
 
-export const KONOMIFY_VERSION = '0.2';
+export const KONOMIFY_VERSION = '0.3';
 export const MESH = 'niceassos-mesh';
 export const RINGS = [
   'R0-ground', 'R1-perception', 'R2-gate', 'R3-heart', 'R4-naming', 'R5-observation', 'R6-resolution',
@@ -152,23 +152,41 @@ export async function defaultStages(base = '..') {
   return { prove, verify, forge, renderCard };
 }
 
-// The behavioural gut: witness's mutation gate on the repo's primary source (package.json "main"),
-// run against the repo's own `npm test`. Discoverable-source-absent is recorded as skipped, NOT a pass —
-// konomify never fabricates a behavioural proof it did not earn. If witness itself is not present, the
-// tract degrades to structure-only rather than crashing (verify → null).
+// The behavioural gut: witness's mutation gate on EVERY behavioural source module — not just `main`.
+//
+// NON-MASKING (v0.3): a composite is only as sound as its weakest part. A clean `main` that imports a
+// broken sub-module used to PASS — the stable half masked the runaway half (the same bug class as a
+// vacuous payload-hash: `elite ≠ correct` hiding inside a green aggregate). So we gate every top-level
+// non-test `.mjs` and short-circuit on the FIRST module with surviving mutants: one runaway sub-DAG fails
+// the whole composite, however clean the rest. An untested behavioural module is itself un-witnessed and
+// therefore a runaway — test it or baseline it. Discoverable-source-absent is recorded as skipped, NOT a
+// pass. If witness itself is not present, the tract degrades to structure-only rather than crashing.
 export async function witnessVerify(base = '..') {
   let runMutations;
   try { ({ runMutations } = await import(`${base}/witness/witness.mjs`)); }
   catch { return undefined; }   // witness not available → structure-only tract
-  const { readFileSync } = await import('node:fs');
+  const { readFileSync, readdirSync } = await import('node:fs');
   const { join } = await import('node:path');
   return (repoPath) => {
-    let main;
-    try { main = JSON.parse(readFileSync(join(repoPath, 'package.json'), 'utf8')).main; }
-    catch { return { clean: true, skipped: true, source: null, reason: 'no package.json' }; }
-    if (!main) return { clean: true, skipped: true, source: null, reason: 'no "main" source declared' };
-    const r = runMutations(join(repoPath, main), { cwd: repoPath, cap: 60 });
-    return { clean: r.clean, score: r.score, survived: r.survived, source: main };
+    let modules;
+    try {
+      const main = JSON.parse(readFileSync(join(repoPath, 'package.json'), 'utf8')).main;
+      const found = readdirSync(repoPath).filter(f =>
+        f.endsWith('.mjs') && !/\.test\.mjs$/.test(f) && !/^test[.-]/.test(f) && f !== 'test.mjs');
+      modules = [...new Set([main, ...found].filter(Boolean))];
+    } catch { return { clean: true, skipped: true, source: null, reason: 'no package.json' }; }
+    if (!modules.length) return { clean: true, skipped: true, source: null, reason: 'no source modules' };
+
+    const checked = [];
+    for (const m of modules) {
+      const r = runMutations(join(repoPath, m), { cwd: repoPath, cap: 60 });
+      checked.push({ source: m, clean: r.clean, score: r.score });
+      if (!r.clean)   // short-circuit — a single runaway sub-module fails the whole composite
+        return { clean: false, score: r.score, survived: r.survived, source: m, modules: checked,
+          reason: `sub-module "${m}" has surviving mutants — a clean module cannot carry a broken one` };
+    }
+    const worst = checked.reduce((a, b) => (b.score < a.score ? b : a), checked[0]);
+    return { clean: true, score: worst.score, survived: [], source: modules.join(', '), modules: checked };
   };
 }
 

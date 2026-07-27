@@ -18,6 +18,10 @@ the tests. A surviving mutant is a line the tests do not actually guard. **A str
 a live mutant goes back to the pan too** — and the mutation score is stamped onto the organ and the card,
 so "konomified" now means *behaviourally* verified, not just badged.
 
+**Non-masking (v0.3):** the behavioural gut gates **every** source module, not just `main` — because a
+clean module can mask a broken one (a green aggregate hiding a runaway part). One un-witnessed sub-module
+fails the whole composite. Test it or baseline it; a build is only as sound as its weakest part.
+
 ## Use
 
 ```bash
