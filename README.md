@@ -1,5 +1,7 @@
 # konomify
 
+**▶ Live: https://sjgant80-hub.github.io/konomify/** — feed it a build and watch the two guts decide. The tract on that page is this repo's real `konomify`, inlined verbatim.
+
 > The one-command **mouth**. Feed it a build; it returns it *konomified* — graded, proven, grafted
 > to the mesh, and carded — or honestly rejected with a note on what's undercooked.
 

@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>konomify — the one-command mouth</title>
+<meta name="description" content="Feed it a build; it returns it &lt;b&gt;konomified&lt;/b&gt; — graded, proven, grafted and carded — or honestly rejected with a note on what is undercooked.">
+<style>
+ :root{--bg:#0a0c0f;--panel:#11151b;--line:#232b36;--ink:#dde5ef;--dim:#8d9bad;--faint:#5d6b7d;
+   --ok:#3fb27f;--warn:#d9a441;--no:#e05561;--accent:#6ea8fe;
+   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+ *{box-sizing:border-box}html,body{margin:0}
+ body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
+ .wrap{max-width:980px;margin:0 auto;padding:0 18px 70px}a{color:var(--accent)}code{font-family:var(--mono);font-size:.92em}
+ header{padding:44px 0 24px;border-bottom:1px solid var(--line)}
+ h1{font-family:var(--mono);font-size:clamp(23px,4.2vw,34px);margin:0 0 10px;letter-spacing:-.02em}
+ h1 .d{color:var(--ok)}
+ .lede{color:var(--dim);max-width:62ch;margin:0;font-size:clamp(15px,2.2vw,17.5px)}.lede b{color:var(--ink);font-weight:600}
+ .stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+ .stat{font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 11px;color:var(--dim)}
+ .stat b{color:var(--ink)}.stat.ok b{color:var(--ok)}
+ h2{font-size:12.5px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:34px 0 13px}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:17px 19px}
+ label{display:block;font-size:11.5px;font-family:var(--mono);color:var(--faint);margin:11px 0 4px;letter-spacing:.05em}
+ input,select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--ink);font:inherit;font-size:13.5px}
+ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+ .row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
+ .out{margin-top:16px;border-top:1px solid var(--line);padding-top:15px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+ .vb{font-family:var(--mono);font-size:22px;font-weight:700;padding:9px 16px;border-radius:8px;border:1px solid;white-space:nowrap}
+ .v-ok{color:var(--ok);border-color:#1e5540;background:#0f2119}
+ .v-no{color:var(--no);border-color:#5e2429;background:#210f11}
+ .why{flex:1;min-width:230px;font-size:13.5px;color:var(--dim)}.why b{color:var(--ink)}
+ .why .mono{font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;margin-top:6px}
+ .note{border-left:2px solid var(--line);padding-left:13px;color:var(--dim);font-size:13.5px;margin:14px 0}
+ .note.warn{border-left-color:var(--warn)}.note b{color:var(--ink)}
+ .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:11px}
+ .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 17px}
+ .card h3{margin:0 0 6px;font-size:14.5px}.card p{margin:0;font-size:13.4px;color:var(--dim)}
+ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
+ th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+ td.k{font-family:var(--mono);color:var(--dim)}
+ footer{margin-top:40px;padding-top:19px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px}
+</style></head><body><div class="wrap">
+<header>
+ <h1>konomify<span class="d">.</span></h1>
+ <p class="lede">Feed it a build; it returns it <b>konomified</b> — graded, proven, grafted and carded — or honestly rejected with a note on what is undercooked.</p>
+ <div class="stats">
+  <span class="stat ok"><b>239</b> lines of kernel, live on this page</span>
+  <span class="stat">decision logic is the real thing</span>
+  <span class="stat">works offline</span>
+ </div>
+</header>
+
+<h2>The tract</h2>
+<p class="note">konomify adds no new organ. It <b>connects</b> the ones that already exist into one pass:
+<b>acg-assessor</b> (the structural gut) → <b>witness</b> (the behavioural gut) → <b>proof-of-play</b> (the
+absorption wall) → the mesh graft → a card. Pass and you join the mesh; fail and you go back to the pan.</p>
+<p class="note"><b>It does not badge-farm — it digests.</b> <code>elite ≠ correct</code>: a build can be
+beautifully structured and still have tests that guard nothing, and that one is rejected too.</p>
+
+<h2>Feed it a build</h2>
+<div class="panel">
+  <div class="row">
+    <div><label for="repo">build</label><input id="repo" value="some-build" spellcheck="false"></div>
+    <div><label for="struct">structural gut · acg-assessor</label>
+      <select id="struct"><option value="true">admissible</option><option value="false">not admissible</option></select></div>
+    <div><label for="mut">behavioural gut · witness</label>
+      <select id="mut"><option value="0">every mutant died</option><option value="3">3 mutants SURVIVED</option></select></div>
+  </div>
+  <div class="out">
+    <div id="vb" class="vb v-ok">KONOMIFIED</div>
+    <div class="why"><span id="why"></span><div class="mono" id="detail"></div></div>
+  </div>
+</div>
+<p class="note warn"><b>Try "admissible" with surviving mutants.</b> That is the case the whole thing exists
+for: structure alone is not enough, and a build whose tests do not actually guard its lines goes back to the pan.</p>
+
+<h2>The honest bound</h2>
+<p class="note warn">This page runs the <b>tract's decision logic</b> with each gut injected as a stub, so you
+choose what they returned. It does not grade, mutate or graft anything — it shows what konomify does with
+those answers, which is the part worth checking. The rejection text below is the kernel's <b>own</b>
+<code>undercooked.message</code>, not a sentence this page wrote about it.</p>
+<p class="note warn">The <b>card</b> stage is deliberately left unwired here. Minting a fallkard needs the real
+forge, and stubbing it would mean printing a seal and a byte count that no forge produced. konomify already
+handles a missing forge honestly — it emits the organ and skips the card — so that is the path the page takes.</p>
+<footer>
+ <p><b>Generated, never typed.</b> The kernel on this page is inlined verbatim from the repo by
+ <code>node build-page.mjs</code>. The tract you exercise here is the real <code>konomify</code>, with each gut injected.</p>
+ <p>MIT · part of the Fall estate · <a href="https://github.com/sjgant80-hub/konomify">source</a> ·
+ <a href="https://sjgant80-hub.github.io/fallworld/">fall world</a></p>
+</footer>
+</div>
+<script type="module">
+
+// ── browser shims. Every one throws: the demo injects its dependencies, so if one of these is ever
+// reached it means the page took an I/O path and should fail loudly rather than fake a result.
+const spawnSync = () => { throw new Error('spawnSync is not available in the browser — this demo injects its assessor'); };
+const readFileSync = () => { throw new Error('readFileSync is not available in the browser'); };
+const basename = (p) => String(p).split(/[\\/]/).filter(Boolean).pop() || String(p);
+// process is shimmed INERT rather than removed, so the kernel's own bottom-of-file guard
+// (`if (process.argv[1] && ...) cli(process.argv)`) evaluates argv[1] as undefined and declines to
+// start the command line — which is exactly what that guard is for. env is empty so the default
+// assessor path resolves to the literal fallback; the page never calls it, it injects its own.
+const process = { argv: [], env: {}, execPath: 'node',
+  exit: (c) => { throw new Error('process.exit(' + c + ') is not available in the browser'); } };
+// ════════════════════════════════════════════════════════════════
+// konomify · the one-command mouth — eat a build, return it konomified or honestly rejected
+//
+// The whole digestive tract in a single call. Feed it a repo:
+//   1. GRADE + PROVE  — run the benchmark (acg-assessor) and mint a Proof-of-Play.        [STRUCTURE]
+//   2. VERIFY         — run the witness mutation gate: mutate the source, re-run the       [BEHAVIOUR]
+//                       tests. A surviving mutant is a line the tests do not actually guard.
+//   3. THE GATE       — not admissible, OR mutants survived? STOP. Report what is undercooked and send
+//                       it back to the pan. Waste is NOT grown into an organ. The honest edge: konomify
+//                       does not badge-farm, it digests. `elite ≠ correct` — structure is not enough.
+//   4. GRAFT          — passed both guts? emit an organ manifest so the build can join the living mesh.
+//   5. CARD           — passed both guts? mint a fallkard receipt card of the metabolized build.
+//
+// konomify adds no new organ. It CONNECTS the ones you already have — acg-assessor (the structural gut),
+// witness (the behavioural gut), proof-of-play (the absorption wall), the mesh graft (becoming an organ),
+// fallkard-forge (what comes out). The stages are injectable, so this file is testable with no sibling
+// tools present; the CLI wires the real ones.
+//
+// Zero runtime dependencies of its own.
+// ════════════════════════════════════════════════════════════════
+
+
+const KONOMIFY_VERSION = '0.3';
+const MESH = 'niceassos-mesh';
+const RINGS = [
+  'R0-ground', 'R1-perception', 'R2-gate', 'R3-heart', 'R4-naming', 'R5-observation', 'R6-resolution',
+];
+
+// A stable default ring from the repo name, so the same build always lands on the same ring and
+// tools spread across all seven. Semantic placement can override via `ring`.
+function defaultRing(name) {
+  let h = 0;
+  for (const c of String(name)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % RINGS.length;
+}
+
+// The konomi receipt: a small, self-contained certificate of the metabolized build. It is the
+// real single-file payload the card carries — reproducible, no styling dependencies.
+function receiptHtml({ repo, ring, core, hash, benchmark, mutation = null }) {
+  const mutationRow = mutation != null
+    ? `\n    <tr><td style="color:#8b93a7;padding:3px 16px 3px 0">mutation gate</td><td>${mutation} (witness)</td></tr>`
+    : '';
+  return `<!doctype html><meta charset="utf-8"><title>${repo} · konomified</title>
+<body style="margin:0;font:15px/1.6 ui-monospace,monospace;background:#0b0d12;color:#e8eaf0;padding:28px">
+<div style="max-width:520px">
+  <div style="letter-spacing:.2em;color:#8b93a7;font-size:11px">KONOMI RECEIPT · niceassos-mesh</div>
+  <h1 style="font:400 30px Georgia,serif;color:#a78bfa;margin:10px 0 4px">${repo}</h1>
+  <div style="color:#4ade80">konomified — metabolized to spec, grafted to the mesh</div>
+  <table style="margin-top:16px;border-collapse:collapse">
+    <tr><td style="color:#8b93a7;padding:3px 16px 3px 0">organ ring</td><td>${ring}</td></tr>
+    <tr><td style="color:#8b93a7;padding:3px 16px 3px 0">benchmark</td><td>${benchmark}</td></tr>
+    <tr><td style="color:#8b93a7;padding:3px 16px 3px 0">core</td><td>${core}</td></tr>${mutationRow}
+    <tr><td style="color:#8b93a7;padding:3px 16px 3px 0">verdict hash</td><td style="word-break:break-all">${hash}</td></tr>
+  </table>
+  <div style="margin-top:18px;color:#8b93a7;font-size:12px">Reproducible: re-run the benchmark on this repo and the hash matches, or this receipt is void.</div>
+</div>`;
+}
+
+// Reading-key tags for the card, derived honestly from the verdict. An admitted build has a
+// verify pass (owl present), fires the VERIFY solid (one blue rose), and — if the assessor found
+// it dependency-free — flies galaxy wings.
+function tagsFor(proof) {
+  const zeroDep = proof?.notApplicable != null; // best-effort; safe default below
+  return `owl:high-left,rose:blue:1,geo:depth0,wings:${zeroDep ? 'galaxy' : 'galaxy'}`;
+}
+
+// ── the tract ──────────────────────────────────────────────────────────────
+// stages: { prove(repoPath)->Proof-of-Play, verify?(repoPath)->{clean,score,survived,source,skipped?},
+//           forge?(opts)->{png,manifest}, renderCard?(opts)->Buffer }
+// Only `prove` is required. `verify` (witness) is the behavioural gut — when wired, a build that is
+// structurally elite but leaves mutants alive goes back to the pan. Without forge/renderCard the card
+// step is skipped (organ still emitted).
+function konomify(repoPath, { prove, verify, forge, renderCard, ring, provedAt } = {}) {
+  if (typeof prove !== 'function') throw new Error('konomify needs a `prove` stage (default: proof-of-play)');
+  const repo = basename(String(repoPath).replace(/[\\/]+$/, ''));
+
+  const proof = prove(repoPath);
+
+  // GATE 1 — STRUCTURE. Waste is not grown into an organ.
+  if (!proof || proof.admissible !== true) {
+    const v = proof?.verdict || {};
+    return {
+      v: KONOMIFY_VERSION, repo, konomified: false, organ: null, card: null, proof: proof || null, behaviour: null,
+      undercooked: {
+        core: v.core ?? null,
+        dominantTell: v.dominantTell ?? null,
+        message: `not food yet — ${v.dominantTell || 'below the bar'}${v.core ? ` (core ${v.core})` : ''}. Back to the pan.`,
+      },
+    };
+  }
+
+  // GATE 2 — BEHAVIOUR. `elite ≠ correct`: the assessor scores structure; witness proves the tests
+  // actually guard the behaviour. A surviving mutant is test-theatre — a green test over a broken line.
+  // Structurally elite but behaviourally unproven builds go back to the pan too. Skipped verify (e.g.
+  // no discoverable source) does NOT fabricate a pass — it is recorded honestly on the organ.
+  const behaviour = typeof verify === 'function' ? verify(repoPath) : null;
+  if (behaviour && behaviour.clean !== true && behaviour.skipped !== true) {
+    const n = behaviour.survived?.length ?? '?';
+    return {
+      v: KONOMIFY_VERSION, repo, konomified: false, organ: null, card: null, proof, behaviour,
+      undercooked: {
+        core: proof.verdict?.core ?? null,
+        dominantTell: 'TEST-THEATRE',
+        message: `elite but not correct — ${n} mutant(s) survived (score ${behaviour.score ?? '?'}). Back to the pan.`,
+      },
+    };
+  }
+
+  // GRAFT — the organ manifest that lets this build join the mesh.
+  const r = Number.isInteger(ring) && ring >= 0 && ring < RINGS.length ? ring : defaultRing(repo);
+  const organ = {
+    id: repo,
+    ring: RINGS[r],
+    mesh: MESH,
+    konomified: provedAt || null,
+    proof: { benchmark: proof.benchmark?.spec ?? null, core: proof.verdict?.core ?? null, hash: proof.hash },
+    // A skipped verify records clean:false — konomify never claims a behavioural pass it did not earn.
+    behaviour: behaviour
+      ? { gate: 'witness', clean: behaviour.skipped !== true && behaviour.clean === true, score: behaviour.skipped ? null : (behaviour.score ?? null), source: behaviour.source ?? null, skipped: behaviour.skipped === true }
+      : null,
+  };
+
+  // CARD — mint the receipt as a fallkard card, if the forge stages are wired.
+  let card = null;
+  if (typeof forge === 'function' && typeof renderCard === 'function') {
+    const tags = tagsFor(proof);
+    const html = receiptHtml({
+      repo, ring: organ.ring, core: proof.verdict?.core, hash: proof.hash, benchmark: organ.proof.benchmark,
+      mutation: organ.behaviour && !organ.behaviour.skipped ? organ.behaviour.score : null,
+    });
+    const image = renderCard({ tags, seal: proof.hash });
+    const { png, manifest } = forge({ build: html, image, tags, assessorPass: true, forged: provedAt });
+    card = { seal: manifest.seal, tags, bytes: png.length, png };
+  }
+
+  return { v: KONOMIFY_VERSION, repo, konomified: true, undercooked: null, proof, behaviour, organ, card };
+}
+
+// ── default stages (the real tools) — wired lazily so tests need no siblings ──
+export async function defaultStages(base = '..') {
+  const { proveRepo, assessorRunner } = await import(`${base}/proof-of-play/filter.mjs`);
+  const assess = assessorRunner(`${base}/acg-assessor/assessor.mjs`);
+  const prove = (repoPath) => proveRepo(repoPath, { assess });
+  const verify = await witnessVerify(base);
+  let forge, renderCard;
+  try {
+    ({ forge } = await import(`${base}/fallkard-forge/forge.mjs`));
+    ({ renderCard } = await import(`${base}/fallkard-forge/art.mjs`));
+  } catch { /* no forge available — organ still emitted, card skipped */ }
+  return { prove, verify, forge, renderCard };
+}
+
+// The behavioural gut: witness's mutation gate on EVERY behavioural source module — not just `main`.
+//
+// NON-MASKING (v0.3): a composite is only as sound as its weakest part. A clean `main` that imports a
+// broken sub-module used to PASS — the stable half masked the runaway half (the same bug class as a
+// vacuous payload-hash: `elite ≠ correct` hiding inside a green aggregate). So we gate every top-level
+// non-test `.mjs` and short-circuit on the FIRST module with surviving mutants: one runaway sub-DAG fails
+// the whole composite, however clean the rest. An untested behavioural module is itself un-witnessed and
+// therefore a runaway — test it or baseline it. Discoverable-source-absent is recorded as skipped, NOT a
+// pass. If witness itself is not present, the tract degrades to structure-only rather than crashing.
+export async function witnessVerify(base = '..') {
+  let runMutations;
+  try { ({ runMutations } = await import(`${base}/witness/witness.mjs`)); }
+  catch { return undefined; }   // witness not available → structure-only tract
+  const { readFileSync, readdirSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  return (repoPath) => {
+    let modules;
+    try {
+      const main = JSON.parse(readFileSync(join(repoPath, 'package.json'), 'utf8')).main;
+      const found = readdirSync(repoPath).filter(f =>
+        f.endsWith('.mjs') && !/\.test\.mjs$/.test(f) && !/^test[.-]/.test(f) && f !== 'test.mjs');
+      modules = [...new Set([main, ...found].filter(Boolean))];
+    } catch { return { clean: true, skipped: true, source: null, reason: 'no package.json' }; }
+    if (!modules.length) return { clean: true, skipped: true, source: null, reason: 'no source modules' };
+
+    const checked = [];
+    for (const m of modules) {
+      const r = runMutations(join(repoPath, m), { cwd: repoPath, cap: 60 });
+      checked.push({ source: m, clean: r.clean, score: r.score });
+      if (!r.clean)   // short-circuit — a single runaway sub-module fails the whole composite
+        return { clean: false, score: r.score, survived: r.survived, source: m, modules: checked,
+          reason: `sub-module "${m}" has surviving mutants — a clean module cannot carry a broken one` };
+    }
+    const worst = checked.reduce((a, b) => (b.score < a.score ? b : a), checked[0]);
+    return { clean: true, score: worst.score, survived: [], source: modules.join(', '), modules: checked };
+  };
+}
+
+// ── CLI ──────────────────────────────────────────────────────────────────
+async function cli(argv) {
+  const arg = (k, d) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : d; };
+  const repo = argv[2];
+  if (!repo || repo.startsWith('--')) { console.error('usage: konomify <repo> [--ring 0-6] [--out dir] [--base ..]'); process.exit(2); }
+
+  const { writeFileSync, mkdirSync } = await import('node:fs');
+  const { join, basename } = await import('node:path');
+  const base = arg('--base', '..');
+  const ringArg = arg('--ring');
+  const stages = await defaultStages(base);
+  const result = konomify(repo, { ...stages, ring: ringArg != null ? parseInt(ringArg, 10) : undefined });
+
+  const name = basename(String(repo).replace(/[\\/]+$/, ''));
+  if (!result.konomified) {
+    console.log(`✗ ${name} — ${result.undercooked.message}`);
+    process.exit(1);
+  }
+  const out = arg('--out', join(repo, 'konomi-out'));
+  mkdirSync(out, { recursive: true });
+  writeFileSync(join(out, 'organ.json'), JSON.stringify(result.organ, null, 2));
+  console.log(`✓ ${name} konomified`);
+  console.log(`  organ  ring ${result.organ.ring} · mesh ${result.organ.mesh}`);
+  console.log(`  proof  core ${result.organ.proof.core} · hash ${String(result.organ.proof.hash).slice(0, 12)}`);
+  if (result.organ.behaviour) {
+    const b = result.organ.behaviour;
+    console.log(`  witness  ${b.skipped ? 'skipped — no main source declared' : `mutation ${b.score} · clean (no test-theatre)`}`);
+  }
+  if (result.card) {
+    writeFileSync(join(out, `${name}.card.png`), result.card.png);
+    console.log(`  card   ${name}.card.png · seal ${String(result.card.seal).slice(0, 12)} · ${result.card.bytes}b`);
+  }
+  console.log(`  → ${out}`);
+}
+
+if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop())) await cli(process.argv);
+
+
+const $ = s => document.querySelector(s);
+function render(){
+  const admissible = $('#struct').value === 'true';
+  const n = Number($('#mut').value);
+  const name = $('#repo').value || 'unnamed';
+
+  // The stubs match the stage contract konomify documents above its own signature:
+  //   prove(repoPath) -> a Proof-of-Play, whose top-level admissible flag is what GATE 1 reads
+  //   verify(repoPath) -> { clean, score, survived: <array>, source, skipped }  — survived is a LIST,
+  //     because the kernel reports survived.length; handing it a number would print "?" instead.
+  const prove = (p) => ({
+    v: 1, repo: p,
+    benchmark: { spec: 'acg-assessor', fingerprint: 'fp-3a91c0' },
+    verdict: { badge: admissible, core: admissible ? 4 : 41, nonCore: 96,
+               dominantTell: admissible ? null : 'SCAFFOLD' },
+    hash: admissible ? 'v-7c21ab90' : 'v-00000000',
+    admissible,
+  });
+  const verify = () => ({
+    clean: n === 0, score: (40 - n) + '/40',
+    survived: Array.from({ length: n }, (_, i) => 'mutant#' + (i + 1)),
+    source: 'kernel.mjs',
+  });
+
+  let out;
+  // forge/renderCard are left out on purpose — see "the honest bound". konomify skips the card.
+  try { out = konomify(name, { prove, verify, provedAt: '2026-08-13' }); }
+  catch (e) { out = { konomified: false, undercooked: { message: e.message } }; }
+
+  const ok = out.konomified === true;
+  $('#vb').className = 'vb ' + (ok ? 'v-ok' : 'v-no');
+  $('#vb').textContent = ok ? 'KONOMIFIED' : 'BACK TO THE PAN';
+  $('#why').innerHTML = ok
+    ? 'Both guts passed, so it grafted to the mesh as ring <b>' + out.organ.ring +
+      '</b>. The card step was skipped — no forge is wired here — and konomify records that rather than faking one.'
+    : 'The kernel\'s own verdict: <b>' + (out.undercooked?.message || 'refused') + '</b>';
+  $('#detail').textContent = ok
+    ? 'organ: ' + JSON.stringify(out.organ)
+    : 'undercooked: ' + JSON.stringify(out.undercooked);
+}
+for (const id of ['repo','struct','mut']) { $('#'+id).addEventListener('input', render); $('#'+id).addEventListener('change', render); }
+render();
+</script></body></html>
