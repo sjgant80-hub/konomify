@@ -1,4 +1,6 @@
-node_modules/
-*.log
-konomi-out/
 *.card.png
+*.log
+fixtures/base/witness/log.txt
+fixtures/out/
+konomi-out/
+node_modules/

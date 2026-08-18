@@ -7,7 +7,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { konomify, defaultRing, receiptHtml, RINGS, MESH, KONOMIFY_VERSION } from './konomify.mjs';
+import { konomify, defaultRing, receiptHtml, witnessVerify, RINGS, MESH, KONOMIFY_VERSION } from './konomify.mjs';
 
 // fake Proof-of-Play stages
 const provePass = () => ({
@@ -130,4 +130,88 @@ test('konomifying is deterministic — same repo + same proof, same organ', () =
   const a = konomify('/good', { prove: provePass, forge, renderCard });
   const b = konomify('/good', { prove: provePass, forge, renderCard });
   assert.deepEqual(a.organ, b.organ);
+});
+
+
+// ─── the boundaries the mutation gate proved nothing was holding (estate bring-up) ───
+
+test('AN EXPLICIT RING IS HONOURED AT BOTH ENDS OF THE LADDER, and nonsense falls back', () => {
+  // ring 0 is a real ring. `>= 0` flipped to `> 0` silently rehomes every R0 organ.
+  assert.equal(konomify('/x', { prove: provePass, ring: 0 }).organ.ring, 'R0-ground');
+  assert.equal(konomify('/x', { prove: provePass, ring: 6 }).organ.ring, 'R6-resolution');
+  const dflt = konomify('/x', { prove: provePass }).organ.ring;
+  // one past the top is not a ring — it is a request for the default, said honestly
+  assert.equal(konomify('/x', { prove: provePass, ring: 7 }).organ.ring, dflt, 'ring 7 was seated');
+  assert.equal(konomify('/x', { prove: provePass, ring: -1 }).organ.ring, dflt);
+  // a numeric STRING is config noise, not a ring — Number.isInteger is the guard that keeps
+  // RINGS["3"] (undefined) off the organ
+  assert.equal(konomify('/x', { prove: provePass, ring: '3' }).organ.ring, dflt, 'a string ring was seated');
+  assert.ok(konomify('/x', { prove: provePass, ring: 7 }).organ.ring, 'the fallback ring came out empty');
+});
+
+test('a prove stage that returns nothing leaves proof as NULL on the refusal, never undefined', () => {
+  const r = konomify('/x', { prove: () => undefined });
+  assert.equal(r.konomified, false);
+  assert.strictEqual(r.proof, null, 'a missing proof came out as ' + String(r.proof));
+  assert.match(r.undercooked.message, /below the bar/, 'a refusal with no tell lost its fallback wording');
+});
+
+test('the organ timestamp is the one given, and NULL — not undefined — when none was', () => {
+  assert.strictEqual(konomify('/x', { prove: provePass }).organ.konomified, null);
+  assert.equal(konomify('/x', { prove: provePass, provedAt: '2026-08-18' }).organ.konomified, '2026-08-18');
+});
+
+test('HALF A FORGE MINTS NO CARD — forge without renderCard, and the reverse, both skip cleanly', () => {
+  // `&&` flipped to `||` calls the half that is missing and the whole konomify throws on the repo
+  // that dared not to have fallkard installed.
+  const only1 = konomify('/x', { prove: provePass, forge });
+  assert.equal(only1.konomified, true);
+  assert.strictEqual(only1.card, null, 'a card was minted with no renderer');
+  const only2 = konomify('/x', { prove: provePass, renderCard });
+  assert.equal(only2.konomified, true);
+  assert.strictEqual(only2.card, null, 'a card was minted with no forge');
+});
+
+// ─── witnessVerify: the module-discovery filter, proven by what the stub was handed ───
+
+test('THE GATE IS POINTED AT EXACTLY THE BEHAVIOURAL MODULES — no tests, no helpers, no strays', async () => {
+  const { unlinkSync, existsSync, readFileSync } = await import('node:fs');
+  const LOG = new URL('./fixtures/base/witness/log.txt', import.meta.url);
+  if (existsSync(LOG)) unlinkSync(LOG);
+  const verify = await witnessVerify('./fixtures/base');
+  const r = verify(new URL('./fixtures/repo', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
+  assert.equal(r.clean, true);
+  // worst-of wins: main scored 0.9, extra 0.6 — the composite must carry the weakest number
+  assert.equal(r.score, 0.6, 'the composite score was not the weakest module');
+  const gated = readFileSync(LOG, 'utf8').trim().split(/\r?\n/);
+  assert.deepEqual(gated, ['main.mjs', 'extra.mjs'],
+    'the filter handed the gate the wrong files: ' + gated.join(', '));
+});
+
+// ─── the CLI: argument parsing is behaviour too ───
+
+test('the CLI with no repo, or a flag where the repo should be, prints usage and exits 2', async () => {
+  const { spawnSync } = await import('node:child_process');
+  for (const args of [[], ['--ring']]) {
+    const r = spawnSync(process.execPath, ['konomify.mjs', ...args], { encoding: 'utf8' });
+    assert.equal(r.status, 2, 'argv ' + JSON.stringify(args) + ' exited ' + r.status);
+    assert.match(r.stderr, /usage: konomify/);
+  }
+});
+
+test('EVERY FLAG READS THE VALUE AFTER IT — ring lands on the organ, out lands on disk', async () => {
+  // `argv[i + 1]` flipped to `argv[i - 1]` makes every flag read the token BEFORE it: the ring
+  // becomes a path, the output lands in the base tree, and nothing anywhere says why.
+  const { spawnSync } = await import('node:child_process');
+  const { readFileSync, rmSync, existsSync } = await import('node:fs');
+  const OUT = new URL('./fixtures/out', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  rmSync(OUT, { recursive: true, force: true });
+  const r = spawnSync(process.execPath,
+    ['konomify.mjs', './fixtures/repo', '--base', './fixtures/base', '--out', OUT, '--ring', '5'],
+    { encoding: 'utf8' });
+  assert.equal(r.status, 0, 'the CLI failed: ' + r.stderr.slice(0, 200) + r.stdout.slice(0, 200));
+  assert.ok(existsSync(OUT + '/organ.json'), 'the organ did not land where --out said');
+  const organ = JSON.parse(readFileSync(OUT + '/organ.json', 'utf8'));
+  assert.equal(organ.ring, 'R5-observation', '--ring 5 produced ' + organ.ring);
+  rmSync(OUT, { recursive: true, force: true });
 });

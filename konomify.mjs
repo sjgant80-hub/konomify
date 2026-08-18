@@ -179,7 +179,10 @@ export async function witnessVerify(base = '..') {
 
     const checked = [];
     for (const m of modules) {
-      const r = runMutations(join(repoPath, m), { cwd: repoPath, cap: 60 });
+      // ⚑ 60s bound, not witness's 20s default. acg-assessor's own suite takes 17s, and witness
+      // rightly refuses to gate when baseline×2 exceeds the bound — so konomify with a fixed short
+      // bound simply could not gate slow-suited repos, and reported that as their failure.
+      const r = runMutations(join(repoPath, m), { cwd: repoPath, cap: 60, timeout: 60000 });
       checked.push({ source: m, clean: r.clean, score: r.score });
       if (!r.clean)   // short-circuit — a single runaway sub-module fails the whole composite
         return { clean: false, score: r.score, survived: r.survived, source: m, modules: checked,
@@ -192,7 +195,10 @@ export async function witnessVerify(base = '..') {
 
 // ── CLI ──────────────────────────────────────────────────────────────────
 async function cli(argv) {
-  const arg = (k, d) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : d; };
+  // `!== -1`, not `>= 0`: indexOf can only be 0 here if the flag IS the node binary path, which no
+  // real invocation can produce — so the >= form carried an untestable branch the gate rightly
+  // flagged. The not-found idiom has no unreachable edge.
+  const arg = (k, d) => { const i = argv.indexOf(k); return i !== -1 ? argv[i + 1] : d; };
   const repo = argv[2];
   if (!repo || repo.startsWith('--')) { console.error('usage: konomify <repo> [--ring 0-6] [--out dir] [--base ..]'); process.exit(2); }
 

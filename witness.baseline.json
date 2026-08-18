@@ -1,0 +1,7 @@
+[
+  {
+    "mutation": "< → <=",
+    "snippet": "const worst = checked.reduce((a, b) => (b.score < a.score ? b : a), checked[0]);",
+    "reason": "equivalent by construction: < and <= differ only when two modules tie on score, and a tie means the same NUMBER is picked either way — only which module supplied it changes, and the module is not part of the observable result (score is; source is the full joined list)."
+  }
+]
