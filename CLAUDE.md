@@ -35,6 +35,5 @@ CI runs `npm test` on every push.
 
 ## Seam
 
-Estate-facing (organ/ring/mesh/konomi vocabulary is fine here). Do **not** introduce the private
-cosmology — no element-to-person mapping, no dyad identity numbers, no "the Thirteen." Engineering
+Estate-facing (organ/ring/mesh/konomi vocabulary is fine here). Do **not** introduce the project's private internal taxonomy or notation. Engineering
 and the estate's own surface vocabulary only.
